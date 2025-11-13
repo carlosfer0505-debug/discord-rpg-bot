@@ -52,7 +52,7 @@ async def on_ready():
 
 
 # ---------------------------
-#   COMANDO /ask (ChatGPT)
+#   COMANDO /ask
 # ---------------------------
 
 @bot.tree.command(name="ask", description="Hazle una pregunta al bot.")
@@ -64,12 +64,21 @@ async def ask(interaction: discord.Interaction, pregunta: str):
 
 
 # ---------------------------
-#   COMANDOS DE ROL
+#   COMANDO /attack (ROL)
 # ---------------------------
 
 @bot.tree.command(name="attack", description="Realiza un ataque narrado.")
 async def attack(interaction: discord.Interaction, accion: str):
     prompt = f"Describe un ataque de rol: {accion}. Sé narrativo pero breve."
     await interaction.response.defer(thinking=True)
+
     respuesta = await deepseek_generate(prompt)
-    await interactio
+    await interaction.followup.send(f"**Ataque narrado:**\n{respuesta}")
+
+
+# ---------------------------
+#   INICIAR EL BOT
+# ---------------------------
+
+if __name__ == "__main__":
+    bot.run(DISCORD_TOKEN)
