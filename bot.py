@@ -37,7 +37,6 @@ async def deepseek_generate(prompt: str) -> str:
         async with session.post(url, json=payload, headers=headers) as resp:
             data = await resp.json()
 
-            # 💥 CONTROL DE ERRORES
             if "choices" not in data:
                 return f"⚠️ Error en la API DeepSeek:\n```json\n{data}\n```"
 
@@ -84,4 +83,5 @@ async def attack(interaction: discord.Interaction, accion: str):
 # Iniciar bot
 # ---------------------------
 
-if __name__ == "__mai
+if __name__ == "__main__":
+    bot.run(DISCORD_TOKEN)
