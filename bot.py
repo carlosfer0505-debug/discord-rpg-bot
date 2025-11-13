@@ -4,28 +4,9 @@ from discord.ext import commands
 from discord import app_commands
 import aiohttp
 from dotenv import load_dotenv
+from aiohttp import web
+import threading
 
-# -------------------------------
-#  KEEP ALIVE SERVER (GRATIS)
-# -------------------------------
-from flask import Flask
-from threading import Thread
-
-app = Flask('')
-
-@app.route('/')
-def home():
-    return "Bot activo y corriendo!"
-
-def run():
-    app.run(host='0.0.0.0', port=8080)
-
-def keep_alive():
-    t = Thread(target=run)
-    t.start()
-
-
-# Cargar variables
 load_dotenv()
 
 DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
@@ -36,8 +17,10 @@ INTENTS.message_content = True
 
 bot = commands.Bot(command_prefix="!", intents=INTENTS)
 
+# ------------------------------------
+#  IA: DeepSeek
+# ------------------------------------
 
-# IA Deepseek
 async def deepseek_generate(prompt: str) -> str:
     url = "https://api.deepseek.com/chat/completions"
 
@@ -56,16 +39,25 @@ async def deepseek_generate(prompt: str) -> str:
             data = await resp.json()
 
             if "choices" not in data:
-                return f"⚠️ Error DeepSeek:\n```json\n{data}\n```"
+                return f"⚠️ Error en la API DeepSeek:\n```json\n{data}\n```"
 
-            return data["choices"][0]["message"]["content"]
+            try:
+                return data["choices"][0]["message"]["content"]
+            except:
+                return f"⚠️ Respuesta inesperada de DeepSeek:\n```json\n{data}\n```"
 
+# ------------------------------------
+# Evento ON_READY
+# ------------------------------------
 
 @bot.event
 async def on_ready():
     await bot.tree.sync()
     print(f"BOT EN LÍNEA como {bot.user}")
 
+# ------------------------------------
+# Comando /ask
+# ------------------------------------
 
 @bot.tree.command(name="ask", description="Hazle una pregunta al bot.")
 async def ask(interaction: discord.Interaction, pregunta: str):
@@ -73,15 +65,33 @@ async def ask(interaction: discord.Interaction, pregunta: str):
     respuesta = await deepseek_generate(pregunta)
     await interaction.followup.send(respuesta)
 
+# ------------------------------------
+# Comando /attack
+# ------------------------------------
 
 @bot.tree.command(name="attack", description="Realiza un ataque narrado.")
 async def attack(interaction: discord.Interaction, accion: str):
-    prompt = f"Describe un ataque de rol: {accion}. Sé narrativo y épico."
+    prompt = f"Describe un ataque de rol: {accion}. Sé narrativo pero breve."
     await interaction.response.defer(thinking=True)
     respuesta = await deepseek_generate(prompt)
     await interaction.followup.send(respuesta)
 
+# ------------------------------------
+# Servidor Web (Render + UptimeRobot)
+# ------------------------------------
+
+async def web_status(request):
+    return web.Response(text="Bot is running!")
+
+def start_web_server():
+    app = web.Application()
+    app.router.add_get("/", web_status)
+    web.run_app(app, host="0.0.0.0", port=8080)  # <-- CORREGIDO
+
+# ------------------------------------
+# Iniciar bot
+# ------------------------------------
 
 if __name__ == "__main__":
-    keep_alive()  # <---- ACTIVAMOS EL SERVIDOR
+    threading.Thread(target=start_web_server).start()
     bot.run(DISCORD_TOKEN)
