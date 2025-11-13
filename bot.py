@@ -17,7 +17,7 @@ bot = commands.Bot(command_prefix="!", intents=INTENTS)
 
 
 # ------------------------------------
-#  IA: DeepSeek (con modelo gratuito)
+#  IA: DeepSeek (modelo gratuito)
 # ------------------------------------
 
 async def deepseek_generate(prompt: str) -> str:
@@ -28,9 +28,8 @@ async def deepseek_generate(prompt: str) -> str:
         "Content-Type": "application/json"
     }
 
-    # 🔥 MODELO GRATUITO
     payload = {
-        "model": "deepseek-reasoner",
+        "model": "deepseek-reasoner",  # <--- MODELO GRATIS
         "messages": [{"role": "user", "content": prompt}]
     }
 
@@ -38,7 +37,6 @@ async def deepseek_generate(prompt: str) -> str:
         async with session.post(url, json=payload, headers=headers) as resp:
             data = await resp.json()
 
-            # Mostrar errores de forma bonita
             if "choices" not in data:
                 return f"⚠️ Error en la API DeepSeek:\n```json\n{data}\n```"
 
